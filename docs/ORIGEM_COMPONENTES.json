@@ -1,0 +1,43 @@
+{
+  "source": "https://github.com/rodrygofesantos/pygame",
+  "commit": "bcc4079703c5947556563c4f2a558064e12b7242",
+  "source_prefix": "Aula_Texturas/alunos",
+  "files": [
+    {
+      "path": "core/__init__.py",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "core/attribute.py",
+      "sha256": "a286c7510271c7f31012d732b4b5a92247a38f2ddf8585cca3cfad8cfe799e07"
+    },
+    {
+      "path": "core/matrix.py",
+      "sha256": "af35969d3e90e36eb534e68ba9d17b28f0311f93b8dd5570a8aa69b93bb610cd"
+    },
+    {
+      "path": "core/object3D.py",
+      "sha256": "301dd98d77a86e49f070c3fc2b298e3a4d04da29aea41cf12ec91c0b8b4bd2d8"
+    },
+    {
+      "path": "core/mesh.py",
+      "sha256": "7cbc6960b0a0c77abe64d8d54238275dbf7a088232a770361dfee685368a3285"
+    },
+    {
+      "path": "core/uniform.py",
+      "sha256": "6c4459628da1f4dc7295957c3900ae4f9540fa2e8f6394459447c5037ea67202"
+    },
+    {
+      "path": "geometry/__init__.py",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "geometry/geometry.py",
+      "sha256": "831c089e91515e06caed2c7b60c1c10d3ff81d66c2142e16c47481096228387f"
+    },
+    {
+      "path": "geometry/boxGeometry.py",
+      "sha256": "9acccd57e0b3c69e81418c5167f591f3996e61620fb7abb63e8453d3130bb53d"
+    }
+  ]
+}

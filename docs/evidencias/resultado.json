@@ -1,0 +1,12 @@
+{
+  "opengl": "4.5 (Core Profile) Mesa 25.0.7-2+deb13u1",
+  "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "rendered_frames": 142,
+  "completed_cycles": 2,
+  "depth_min": 0.29058364033699036,
+  "depth_max": 1.0,
+  "max_changed_depth_pixels": 9221,
+  "bucket_pickup_alignment": true,
+  "pixels_changed_by_shadow": 32359,
+  "gl_error": 0
+}
