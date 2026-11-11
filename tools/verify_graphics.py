@@ -3,7 +3,6 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import json
-from itertools import product
 import numpy as np
 import pygame
 from OpenGL.GL import *
@@ -22,7 +21,6 @@ def main():
     pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK,pygame.GL_CONTEXT_PROFILE_CORE)
     pygame.display.set_mode((960,540),pygame.OPENGL|pygame.DOUBLEBUF)
     renderer=Renderer(1024); scene=Environment(Parts(renderer.material)); camera=Camera(); hud=Hud()
-    renderer.bloom=False; renderer.bump=False; renderer.post=False  # comparações em espaço direto
     out=Path(sys.argv[1]) if len(sys.argv)>1 else Path('capturas/verificacao')
     out.mkdir(parents=True,exist_ok=True)
     report={'opengl':glGetString(GL_VERSION).decode(),'renderer':glGetString(GL_RENDERER).decode()}
@@ -78,42 +76,10 @@ def main():
         hud.draw(m,60,True,False,True,pose.fade,960,540)
         renderer.screenshot(out/(name+'.png'),960,540)
         assert glGetError()==GL_NO_ERROR
-    # Os efeitos gráficos devem renderizar sem erros mesmo combinados.
-    renderer.bloom=True;renderer.bump=True;renderer.post=True
-    m=Mission();m.update(18);scene.animate(m)
-    renderer.draw(scene,camera,960,540)
-    assert glGetError()==GL_NO_ERROR
-    report['bloom_bump_post_rendered']=True
-    # Exercita todos os controles e confirma que os efeitos alteram a imagem.
-    images={}
-    for bloom,bump,post in product((False,True),repeat=3):
-        renderer.bloom=bloom;renderer.bump=bump;renderer.post=post
-        renderer.draw(scene,camera,960,540)
-        assert glGetError()==GL_NO_ERROR
-        images[bloom,bump,post]=np.frombuffer(
-            glReadPixels(0,0,960,540,GL_RGB,GL_UNSIGNED_BYTE),dtype=np.uint8).astype(int)
-    baseline=images[False,False,False]
-    differences={}
-    for label,key in [('bloom',(True,False,False)),('bump',(False,True,False)),('post',(False,False,True))]:
-        diff=np.abs(images[key]-baseline).reshape(-1,3).max(axis=1)
-        differences[label]=int(np.count_nonzero(diff>0))
-        assert differences[label]>0, (label,differences)
-    report['effect_combinations_rendered']=len(images)
-    report['pixels_changed_by_effect']=differences
-    renderer.bloom=True;renderer.bump=True;renderer.post=True
-    renderer.draw(scene,camera,960,540)
-    hud.draw(m,60,renderer.shadows,False,True,0,960,540,
-             show_stats=True,effects=(True,True,True))
-    renderer.screenshot(out/'05_efeitos.png',960,540)
-    # Redimensionamento dos FBOs e restauração para a resolução original.
-    for w,h in ((640,360),(1,1),(960,540)):
-        renderer.draw(scene,camera,w,h)
-        assert glGetError()==GL_NO_ERROR
-    report['postprocess_resize_checked']=True
     # Invalid values, inconsistent transforms or dark fake shadow decals would
     # not produce these changing depth values and the second-pass difference.
     report['gl_error']=int(glGetError())
-    (out/'resultado.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+    (out/'resultado.json').write_text(json.dumps(report,indent=2),encoding='utf-8',newline='\n')
     print(json.dumps(report,indent=2));pygame.quit()
 
 if __name__=='__main__':main()

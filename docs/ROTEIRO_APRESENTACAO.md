@@ -28,7 +28,7 @@ Durante a pausa, mova com WASD e oriente com as setas. Demonstre o botão direit
 
 Aproxime o chão e o painel solar. Mostre os PNGs em `assets/textures`, a UV e `uvRepeat` no shader. As superfícies têm normais; a inversa transposta da matriz model mantém a normal correta quando há escala não uniforme.
 
-A luz direcional usa raios paralelos. `dot(normal, light)` determina o difuso; um termo ambiente evita preto total. O sinalizador altera cor e emissão local. A cena HDR alimenta a extração e o desfoque de brilho para produzir bloom (F1). Demonstre também o bump nas superfícies (F2), tone mapping/gama (F3) e o painel de métricas (F4). GPU sem fonte disponível aparece como N/D.
+A luz direcional usa raios paralelos. `dot(normal, light)` determina o difuso; um termo ambiente evita preto total. O sinalizador altera cor e emissão local. A cena é desenhada diretamente na janela. Demonstre o painel de métricas com F4 e explique que CPU total mede a ocupação do sistema. CPU e GPU são coletadas separadamente, sem bloquear a renderização. GPU sem fonte disponível aparece como N/D.
 
 ## 7:00–8:30 — Sombra projetada
 
@@ -38,7 +38,7 @@ Mostre `depth.vert`, `depth.frag`, `scene.vert` e `scene.frag:shadowVisibility`.
 
 ## 8:30–10:00 — Evidências e perguntas
 
-Mostre `docs/evidencias/resultado.json` e o registro dos testes. Informe que os testes de desenvolvimento foram em Linux/Mesa por software. Só declare testes no Windows que você realmente fez. Mostre a atribuição dos componentes da disciplina e a ressalva sobre a confirmação docente de sua aceitação como framework do livro.
+Mostre `docs/evidencias/resultado_simplificado.json`, `telemetria_cpu.json` e o registro dos testes. A versão atual foi executada de forma automatizada no Windows com Intel Iris Xe; os registros originais em Linux/Mesa estão identificados como históricos. Diferencie esses testes da sua inspeção manual com teclado/mouse. Mostre a atribuição dos componentes da disciplina e a ressalva sobre a confirmação docente de sua aceitação como framework do livro.
 
 ### Respostas curtas para treinar
 

@@ -10,8 +10,6 @@ uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
 uniform float emission;
 uniform bool shadowsEnabled;
-uniform bool bumpEnabled;
-uniform float bumpStrength;
 out vec4 fragColor;
 float shadowVisibility(vec3 normal) {
     vec3 projected = lightPosition.xyz / lightPosition.w * 0.5 + 0.5;
@@ -28,29 +26,8 @@ float shadowVisibility(vec3 normal) {
         }
     return lit / 9.0;
 }
-float relief(vec2 coord) {
-    // Bump baseado em textura + micro-relevo procedural, sem mapas externos.
-    vec3 rgb = texture(colorTexture, coord).rgb;
-    float textureHeight = dot(rgb, vec3(.30, .59, .11));
-    float grains = sin(coord.x*37.0)*cos(coord.y*31.0)*.5 + .5;
-    return mix(textureHeight, grains, .4);
-}
-vec3 bumpNormal(vec3 n) {
-    if (!bumpEnabled || bumpStrength <= 0.0) return n;
-    vec3 dpdx = dFdx(worldPosition), dpdy = dFdy(worldPosition);
-    vec2 duvdx = dFdx(uv), duvdy = dFdy(uv);
-    vec3 tangent = dpdx*duvdy.y - dpdy*duvdx.y;
-    vec3 bitangent = -dpdx*duvdy.x + dpdy*duvdx.x;
-    if (length(tangent)<1e-6 || length(bitangent)<1e-6) return n;
-    tangent = normalize(tangent);
-    bitangent = normalize(bitangent);
-    vec2 offset = 1.0 / vec2(textureSize(colorTexture,0));
-    float dhdu = relief(uv+vec2(offset.x,0)) - relief(uv-vec2(offset.x,0));
-    float dhdv = relief(uv+vec2(0,offset.y)) - relief(uv-vec2(0,offset.y));
-    return normalize(n - (tangent*dhdu + bitangent*dhdv) * bumpStrength * 5.0);
-}
 void main() {
-    vec3 normal = bumpNormal(normalize(worldNormal));
+    vec3 normal = normalize(worldNormal);
     vec3 light = normalize(-lightDirection);
     float diffuse = max(dot(normal, light), 0.0);
     vec3 halfway = normalize(light + normalize(cameraPosition-worldPosition));

@@ -6,7 +6,7 @@ Pygame cria janela, contexto, eventos, relógio e superfícies de texto. OpenGL 
 
 Componentes usados do material da disciplina: `Object3D` organiza pais/filhos; `Matrix` fornece matrizes; `Geometry` armazena atributos; `Attribute` cria VBOs; `Mesh` cria VAOs e associa atributos ao programa; `Uniform` envia as matrizes à GPU. `BoxGeometry` constrói posições e UV de caixas. `LitBoxGeometry` adiciona normais a essas caixas; cilindros, cones truncados e rochas são extensões de `Geometry`.
 
-O quadro segue a ordem: eventos → câmera com `dt` real → missão com `dt` quando não pausada → atualização de transformações → passagem de profundidade → cena iluminada em HDR → extração/desfoque de bloom → composição final → HUD → troca de buffers. Pausar evita só `Mission.update`; não interrompe eventos, câmera, renderização ou atualização do mapa.
+O quadro segue a ordem: eventos → câmera com `dt` real → missão com `dt` quando não pausada → atualização de transformações → passagem de profundidade → cena iluminada diretamente na janela → HUD → troca de buffers. Pausar evita só `Mission.update`; não interrompe eventos, câmera, renderização ou atualização do mapa.
 
 ## Transformações e hierarquia
 
@@ -38,9 +38,6 @@ A função `smooth` interpola com `3t²−2t³`; velocidades começam e terminam
 |---|---|---|---|
 | Cena | `shaders/scene.vert` | `shaders/scene.frag` | Transformação, UV, luz local e comparação de sombra |
 | Profundidade | `shaders/depth.vert` | `shaders/depth.frag` | Renderização do ponto de vista da luz, escrevendo a profundidade |
-| Extração de brilho | `shaders/post.vert` | `shaders/extract.frag` | Pixels com algum canal HDR acima de 1,12 |
-| Desfoque | `shaders/post.vert` | `shaders/blur.frag` | Seis passagens gaussianas alternando os eixos em meia resolução |
-| Composição | `shaders/post.vert` | `shaders/compose.frag` | Bloom, exposição, tone mapping e gama |
 | HUD | `shaders/hud.vert` | `shaders/hud.frag` | Texto, ajuda e transição escura |
 
 `rendering/renderer.py:program` compila os shaders, verifica o link e fixa localizações compatíveis entre cena e profundidade. Os shaders usam **GLSL 330 core**.
@@ -69,12 +66,6 @@ Os atributos de cena são vinculados por `Attribute.associateVariable` dentro de
 | cameraPosition | vec3 | cena | Posição mundial para brilho e névoa suave |
 | emission | float | cena | Termo aditivo local usado no sinalizador/faróis |
 | shadowsEnabled | bool | cena | Comparação com/sem sombras pela tecla L |
-| bumpEnabled / bumpStrength | bool / float | cena | Controle F2 e intensidade por malha |
-| sourceTexture | sampler2D | pós-processamento | Cena HDR ou passagem anterior |
-| bloomTexture | sampler2D | composição | Brilho desfocado na unidade 1 |
-| useBloom / usePost | bool | composição | Controles F1 e F3 |
-| exposure | float | composição | Exposição 1,10 |
-| horizontal | bool | desfoque | Eixo do filtro gaussiano |
 | hudTexture | sampler2D | HUD | Textura RGBA do painel na unidade 0 |
 | fade | float | HUD | Opacidade da transição escura sobre o cenário |
 
@@ -84,14 +75,14 @@ Não há uniform `time`, `deltaTime`, `normalMatrix` ou luz pontual: o tempo alt
 
 As quatro imagens são carregadas de `assets/textures` por Pygame e enviadas com `glTexImage2D`, mipmaps e `GL_REPEAT`. `sand.png` aparece no chão e no caminho; `solar.png` no painel do rover; `hazard.png` nas plataformas e na escavadeira; `white.png` mantém o mesmo pipeline nas peças de cor sólida. A imagem só é o resultado final da geração programática: ela é carregada como PNG real e amostrada com UV.
 
-No vertex shader, `worldNormal = transpose(inverse(mat3(modelMatrix))) * vertexNormal`. Isso conserva a orientação correta da normal sob escala não uniforme. O fragment shader renormaliza a normal e calcula iluminação difusa de Lambert, um brilho Blinn–Phong discreto, termo ambiente e emissão local do sinalizador. A direção da luz é `normalize(-0.55,-1,-0.45)`. Não há luzes pontuais. A emissão alimenta a cena HDR; extração e desfoque dos pixels brilhantes em `PostProcess` produzem o halo de bloom. O bump mapping perturba as normais de areia e rochas por diferenças de altura da textura e de um padrão procedural, sem deslocar a geometria.
+No vertex shader, `worldNormal = transpose(inverse(mat3(modelMatrix))) * vertexNormal`. Isso conserva a orientação correta da normal sob escala não uniforme. O fragment shader renormaliza a normal e calcula iluminação difusa de Lambert, um brilho Blinn–Phong discreto, termo ambiente e emissão local do sinalizador. A direção da luz é `normalize(-0.55,-1,-0.45)`. O sinalizador altera cor e emissão local, sem halo. As normais são as da geometria, renormalizadas no shader. Não há luzes pontuais ou passes de efeitos especiais.
 
 ## Shadow mapping real em duas passagens
 
 1. `Renderer.__init__` cria FBO com textura **GL_DEPTH_COMPONENT24**, por padrão 2048². Fixa draw/read buffers em `GL_NONE` e exige `GL_FRAMEBUFFER_COMPLETE`.
 2. A luz direcional usa câmera ortográfica de −16 a +16 em X/Y, near 1 e far 60, vista de `-lightDirection * 26` para a origem. Raios paralelos combinam com a projeção ortográfica.
 3. `Renderer.draw`, primeira passagem: viewport do mapa, limpeza do depth buffer, `depth.vert`, matriz mundial atual de cada objeto que projeta sombra e `glDrawArrays`. O fragment shader vazio usa a gravação de profundidade do pipeline; não existe decalque.
-4. Segunda passagem: direciona a cena para o framebuffer HDR `GL_RGBA16F` com depth renderbuffer de 24 bits e viewport da janela. Cada fragmento usa sua posição no espaço da luz, divide por W e remapeia NDC de [−1,1] para [0,1].
+4. Segunda passagem: restaura o framebuffer 0 e o viewport da janela, renderizando diretamente nela. Cada fragmento usa sua posição no espaço da luz, divide por W e remapeia NDC de [−1,1] para [0,1].
 5. `scene.frag:shadowVisibility` compara a profundidade atual, descontado o bias, com a profundidade da textura. Usa PCF de nove amostras. Fragmentos fora do frustum são tratados como iluminados; a borda da textura também é branca.
 6. A sombra reduz iluminação difusa e brilho; a componente ambiente permanece. O mapa é renderizado novamente a cada quadro, acompanhando a torre, o braço, a rocha e os veículos.
 
@@ -99,14 +90,19 @@ Bias: `max(0.0012 * (1 − dot(normal, −lightDirection)), 0.00035)`, em coorde
 
 **Sombreamento local** calcula a aparência da superfície conforme normal, luz e material. **Sombra projetada** verifica se outro trecho da cena bloqueia a luz até a superfície. A tecla L desliga só a segunda operação: as superfícies continuam iluminadas e orientadas pela luz.
 
-## Pós-processamento e métricas
+## Métricas de desempenho
 
-`PostProcess.begin` aloca os framebuffers na primeira utilização ou quando a resolução muda. `end` extrai brilho, aplica três pares de desfoque e compõe no framebuffer 0. F1 controla bloom; F3 controla exposição, tone mapping e gama. O HUD é desenhado depois da composição. `--no-bloom`, `--no-bump` e `--no-post` definem os estados iniciais.
+FPS vem do relógio do Pygame. **CPU total** mostra a ocupação do sistema, com uma casa decimal: é amostrada por 0,5 s e atualizada aproximadamente a cada segundo em um coletor próprio. No Windows, se `psutil` não estiver instalado ou a leitura falhar, usa `GetSystemTimes` para calcular a diferença dos tempos de atividade e ociosidade. A CPU atualiza sem aguardar a GPU. Até a primeira amostra válida aparece `medindo...`; fonte indisponível aparece como `N/D`.
 
-`PerformanceMonitor` coleta CPU pelo psutil e GPU pelo nvidia-smi ou contador de motor do Windows, em uma thread com consultas limitadas por timeout. A renderização apenas lê um snapshot protegido por lock. CPU mede o sistema inteiro; `GPU motor*` não é utilização global. Fonte indisponível aparece como N/D. F4 oculta o painel.
+A GPU continua sendo consultada por `nvidia-smi` ou pelo contador do motor mais ocupado do Windows, em outro coletor com timeout. `GPU motor*` não representa utilização global. Falhas em uma fonte não interrompem a outra nem o desenho da cena. F4 mostra ou oculta o painel.
+
+A renderização apenas lê um snapshot protegido por lock. O encerramento sinaliza os dois coletores e aguarda sua finalização por tempo limitado.
 
 ## Limites e comprovação
 
-As capturas são renderizações reais. `tools/verify_graphics.py` verifica FBO, shaders compilados/linkados por execução, dois ciclos, mapa com profundidades válidas, mudanças no mapa e comparação de pixels com sombras on/off. `docs/evidencias/resultado.json` guarda os números. Esse JSON é do registro original com Mesa llvmpipe em Linux. A atualização de 11/11/2026 também passou em GPU Intel Iris Xe no Windows; consultar `docs/TESTES.md` e `docs/evidencias/resultado_atualizacao.json`. Teclado/mouse físicos e o roteiro manual de apresentação permanecem pendentes.
+As capturas são renderizações reais. `tools/verify_graphics.py` verifica FBO, shaders compilados/linkados por execução, dois ciclos, mapa com profundidades válidas, mudanças no mapa e comparação de pixels com sombras on/off. `docs/evidencias/resultado.json` guarda os números. Esse JSON é do registro original com Mesa llvmpipe em Linux. A atualização de 11/11/2026 também passou em GPU Intel Iris Xe no Windows; consultar `docs/TESTES.md` e `docs/evidencias/resultado_simplificado.json`. Teclado/mouse físicos e o roteiro manual de apresentação permanecem pendentes.
 
 A base integrada é o subconjunto didático independente da disciplina. A conformidade formal dessa versão com a exigência do framework do livro depende de confirmação docente; consultar `FONTES_E_ATRIBUICAO.md`.
+
+
+Referências de medição: [psutil.cpu_percent](https://psutil.readthedocs.io/stable/index.html#psutil.cpu_percent) e [GetSystemTimes (Microsoft)](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemtimes). No fallback, o tempo kernel já inclui ocioso: CPU = 100 × (delta total − delta ocioso) / delta total, com total = kernel + user.

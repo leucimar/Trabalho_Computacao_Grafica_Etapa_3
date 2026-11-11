@@ -35,4 +35,4 @@ class Rover(Object3D):
         self.antenna.transform=transform((-.6,1.35,0),(0,yaw,0))
         pulse=.5+.5*math.sin(time*8)
         self.beacon.color=(1,.25+.4*pulse,.08) if pose.signal else (.2,.85,.68)
-        self.beacon.emission=(1.4+.55*pulse) if pose.signal else .12
+        self.beacon.emission=.4 if pose.signal else .12

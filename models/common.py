@@ -30,7 +30,6 @@ class Parts:
         obj.transform=transform(position,rotation,scale)
         obj.color=color; obj.texture_name=texture; obj.uv_repeat=uv
         obj.emission=emission; obj.cast_shadow=True
-        obj.bump_strength = .24 if kind=='rock' else (.18 if texture=='sand' else 0.0)
         parent.add(obj)
         return obj
 

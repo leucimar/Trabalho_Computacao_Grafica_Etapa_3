@@ -26,9 +26,6 @@ def run(args):
         pygame.display.set_mode((width,height),pygame.OPENGL|pygame.DOUBLEBUF)
         pygame.display.set_caption('Operação Rover | Computação Gráfica — Etapa 3')
         renderer=Renderer(args.shadow_size)
-        renderer.bloom=not args.no_bloom
-        renderer.bump=not args.no_bump
-        renderer.post=not args.no_post
         monitor=PerformanceMonitor()
         print('OpenGL:',glGetString(GL_VERSION).decode(),flush=True)
         print('Renderer:',glGetString(GL_RENDERER).decode(),flush=True)
@@ -52,9 +49,6 @@ def run(args):
                     elif event.key==pygame.K_c: camera.home()
                     elif event.key==pygame.K_h: help_visible=not help_visible
                     elif event.key==pygame.K_l: renderer.shadows=not renderer.shadows
-                    elif event.key==pygame.K_F1: renderer.bloom=not renderer.bloom
-                    elif event.key==pygame.K_F2: renderer.bump=not renderer.bump
-                    elif event.key==pygame.K_F3: renderer.post=not renderer.post
                     elif event.key==pygame.K_F4: stats_visible=not stats_visible
                     elif event.key==pygame.K_F12:
                         capture_count+=1; capture=Path('capturas')/f'rover_{time.time_ns()}_{capture_count}.png'
@@ -73,8 +67,7 @@ def run(args):
             pose=scene.animate(mission)
             renderer.draw(scene,camera,width,height)
             hud.draw(mission,clock.get_fps(),renderer.shadows,mouse_active,help_visible,pose.fade,width,height,
-                     telemetry=monitor.snapshot(clock.get_fps()),show_stats=stats_visible,
-                     effects=(renderer.bloom,renderer.bump,renderer.post))
+                     telemetry=monitor.snapshot(clock.get_fps()),show_stats=stats_visible)
             frames+=1
             if args.frames and frames>=args.frames:
                 running=False
@@ -100,9 +93,6 @@ def parse_args():
     p.add_argument('--fixed-dt',type=float,help='Avanço simulado por quadro, somente para testes')
     p.add_argument('--at',type=float,help='Congela no segundo indicado; câmera continua livre')
     p.add_argument('--capture',type=Path,help='Salva último quadro antes de trocar buffers')
-    p.add_argument('--no-bloom',action='store_true',help='Desativa o bloom')
-    p.add_argument('--no-bump',action='store_true',help='Desativa bump mapping')
-    p.add_argument('--no-post',action='store_true',help='Desativa tone mapping e gamma')
     return p.parse_args()
 
 if __name__=='__main__':

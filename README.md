@@ -2,7 +2,7 @@
 
 Trabalho de Computação Gráfica, Etapa 3, 2026/02. **Leucimar Tiago da Silva Carvalho**. Trabalho individual autorizado pelo professor. Temas: **15 — escavadeira de brinquedo** e **18 — rover explorador**.
 
-![Cena atualizada renderizada no Windows com efeitos e métricas](docs/evidencias/cena_atualizada.jpg)
+![Cena renderizada no Windows com métricas](docs/evidencias/cena_simplificada.jpg)
 
 Um rover percorre um terreno de testes, detecta uma rocha e solicita apoio. A escavadeira desloca a base, aproxima a caçamba, recolhe a rocha e libera o caminho. O rover aguarda o encerramento da operação antes de prosseguir. O ciclo de 35 segundos se repete com transição escura. A rocha é um objeto de cenário; não há terceiro personagem, física ou colisões.
 
@@ -38,7 +38,6 @@ A primeira instalação precisa de internet. Depois disso a aplicação usa excl
 | R | Reiniciar missão e retirar pausa |
 | C | Restaurar enquadramento inicial |
 | L | Alternar sombras para comparar com iluminação local |
-| F1 / F2 / F3 | Alternar bloom / bump mapping / pós-processamento |
 | F4 | Mostrar / ocultar FPS, CPU e GPU |
 | H | Mostrar / ocultar ajuda |
 | F12 | Capturar quadro em `capturas/` |
@@ -58,7 +57,6 @@ A primeira instalação precisa de internet. Depois disso a aplicação usa excl
 | Primitivas / normais / UV | `geometry/`, `LitBoxGeometry`, `CylinderGeometry`, `RockGeometry` |
 | Shadow mapping real em duas passagens | `rendering/renderer.py`, `Renderer` |
 | Vertex / fragment shaders | `shaders/scene.*`, `shaders/depth.*`, `shaders/hud.*` |
-| HDR, bloom e composição final | `rendering/postprocess.py`, shaders `post`, `extract`, `blur`, `compose` |
 | Métricas assíncronas | `rendering/telemetry.py`, `PerformanceMonitor` |
 | Legenda | `rendering/hud.py`, `Hud` |
 | Texturas próprias e gerador reproduzível | `assets/textures/`, `tools/generate_textures.py` |
@@ -79,7 +77,7 @@ Referência principal: STEMKOSKI, Lee; PASCALE, Michael. *Developing Graphics Fr
 .venv\Scripts\python.exe tools\verify_graphics.py
 ```
 
-O teste gráfico abre um contexto real, renderiza dois ciclos acelerados e verifica profundidade, sombras, alinhamento de coleta/depósito, oito combinações de efeitos, diferenças reais na imagem e redimensionamento dos framebuffers sem erros OpenGL. Não é um benchmark nem substitui os controles manuais no Windows.
+O teste gráfico abre um contexto real, renderiza dois ciclos acelerados e verifica profundidade, sombras, alinhamento de coleta/depósito, renderização direta na janela e ausência de erros OpenGL. Não é um benchmark nem substitui os controles manuais no Windows.
 
 - [Guia técnico: shaders, attributes, uniforms, hierarquia e sombras](docs/GUIA_TECNICO.md)
 - [Roteiro de apresentação de 10 minutos](docs/ROTEIRO_APRESENTACAO.md)
@@ -93,7 +91,7 @@ Para inspecionar uma etapa específica: `python main.py --at 15`. Para sair auto
 
 - **`Failed to build pygame`:** confira se está usando Python 3.12 de 64 bits e o ambiente recém-criado; não reutilize um venv de Python diferente. Execute os comandos com `.venv\Scripts\python.exe`.
 - **Contexto OpenGL indisponível / shader não compila:** atualize o driver oficial da placa e execute localmente. O projeto exige OpenGL 3.3 e GLSL 330; adaptadores antigos ou sessões remotas podem não oferecê-los.
-- **Baixo desempenho:** tente `--shadow-size 1024` ou `512` e desative efeitos com `--no-bloom --no-bump --no-post`. Não há taxa de FPS garantida para hardware não testado.
+- **Baixo desempenho:** tente `--shadow-size 1024` ou `512`. Não há taxa de FPS garantida para hardware não testado.
 - **Arquivos ausentes:** extraia todo o ZIP. Os recursos são resolvidos a partir da pasta do projeto. `python tools/generate_textures.py` recria as quatro texturas próprias.
 - **`Attempt to retrieve context when no valid context` em SDL offscreen Linux:** no ambiente de teste foi necessário `PYOPENGL_PLATFORM=egl`. Isso não deve ser configurado para a execução Windows normal.
 
@@ -103,22 +101,12 @@ Responsável acadêmico único: Leucimar Tiago da Silva Carvalho, com revisão, 
 
 Foi usado **ChatGPT Work / Codex** para elaboração e revisão da estrutura, geometria adicional, modelos, máquina de estados, controles, renderer, shaders, gerador de texturas, testes e documentação. Os arquivos externos em `core/` e parte de `geometry/` são atribuídos ao material do professor; não são apresentados como criação do aluno ou da IA. A assistência de IA não dispensa a revisão e o domínio do código pelo aluno. Nenhum teste no PC do aluno é declarado como já executado.
 
-Bloom, bump mapping e pós-processamento estão implementados nesta atualização, com controles independentes e painel de desempenho. Consulte a descrição abaixo e o registro de testes.
+A versão atual foi simplificada: bloom, bump mapping e pós-processamento foram removidos, incluindo os shaders, os controles F1/F2/F3 e as opções correspondentes. A cena mantém texturas, iluminação, sombras e as correções de coleta/depósito da pedra.
 
-## Atualização visual e monitoramento de desempenho
+## Monitoramento de desempenho
 
-- **F1:** alternar bloom/glow (brilho da sinalização do rover).
-- **F2:** alternar bump mapping (micro-relevo da areia e rochas).
-- **F3:** alternar pós-processamento (tone mapping, exposição e correção gama).
-- **F4:** mostrar/ocultar painel de FPS/CPU/GPU no canto superior direito.
-- **L:** alternar sombras, sem desativar os novos efeitos.
+FPS vem do relógio do Pygame. **CPU total** mostra a ocupação do sistema, com uma casa decimal: é amostrada por 0,5 s e atualizada aproximadamente a cada segundo em um coletor próprio. No Windows, se `psutil` não estiver instalado ou a leitura falhar, usa `GetSystemTimes` para calcular a diferença dos tempos de atividade e ociosidade. A CPU atualiza sem aguardar a GPU. Até a primeira amostra válida aparece `medindo...`; fonte indisponível aparece como `N/D`.
 
-A cena agora utiliza framebuffer HDR, extração de pixels brilhantes, desfoque gaussiano em meia resolução e composição final. O bump mapping perturba normais no fragment shader usando amostragem de altura e um padrão procedural; não desloca a geometria. Os efeitos podem ser desligados no início com `--no-bloom`, `--no-bump` e `--no-post` para comparar o resultado ou economizar GPU.
+A GPU continua sendo consultada por `nvidia-smi` ou pelo contador do motor mais ocupado do Windows, em outro coletor com timeout. `GPU motor*` não representa utilização global. Falhas em uma fonte não interrompem a outra nem o desenho da cena. F4 mostra ou oculta o painel.
 
-**Monitoramento:** FPS vem do relógio do Pygame; CPU é a ocupação total do sistema amostrada pelo `psutil`; GPU é a utilização retornada por `nvidia-smi` quando disponível. Em outras placas no Windows, tenta-se o motor de GPU mais ocupado via Performance Counters, indicado como `GPU motor*` (não é ocupação global). Se o driver/Windows não fornecer a métrica, exibe `N/D`. Uma thread coleta dados em intervalos de aproximadamente dois segundos para não travar a renderização. A leitura pode divergir do Gerenciador de Tarefas por considerar motores diferentes. Consulte `rendering/telemetry.py`.
-
-**Ajustes da pedra:** a caçamba foi alargada, a pedra foi reduzida para caber nela e o movimento de giro foi invertido, depositando a pedra fora da pista, longe do rover. O contato é coreografado, sem simulação de colisões físicas. Teste a coleta e a descarga pela visão lateral no Windows para validar visualmente.
-
-**Atualização de dependências:** execute novamente `.venv\Scripts\python.exe -m pip install -r requirements.txt` para instalar `psutil`.
-
-**Arquivos novos:** `rendering/postprocess.py`, `rendering/telemetry.py` e shaders `post.vert`, `extract.frag`, `blur.frag`, `compose.frag`. Alterações nos módulos de cena, modelos, renderizador, HUD e testes são assistidas por IA e devem ser revisadas pelo responsável acadêmico antes da apresentação.
+A caçamba ampliada, a pedra menor e o depósito fora da pista continuam presentes. O contato é coreografado, sem simulação de colisões físicas.

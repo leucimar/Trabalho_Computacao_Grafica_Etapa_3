@@ -1,0 +1,90 @@
+{
+  "psutil": [
+    {
+      "fps": 60,
+      "cpu": 39.8,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 39.8,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 7.8,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 7.8,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 5.8,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 9.4,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    }
+  ],
+  "windows_native_without_psutil": [
+    {
+      "fps": 60,
+      "cpu": 16.666666666666668,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 16.666666666666668,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 28.40909090909091,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 28.40909090909091,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 10.227272727272727,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    },
+    {
+      "fps": 60,
+      "cpu": 3.787878787878788,
+      "cpu_status": "ok",
+      "gpu": null,
+      "gpu_kind": "GPU"
+    }
+  ]
+}

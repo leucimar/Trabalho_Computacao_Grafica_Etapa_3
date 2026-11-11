@@ -61,11 +61,13 @@ Não configure `SDL_VIDEODRIVER=dummy`: esse driver não oferece contexto OpenGL
 
 ## Limites conhecidos
 
-Cena demonstrativa com trajetórias programadas. Não há colisão, transparência de vidro, sombras em cascata ou luz pontual. A atualização de 11/11/2026 acrescenta bloom, bump mapping e pós-processamento; o registro acima descreve a versão anterior. O mapa usa frustum fixo adequado ao terreno; detalhes finos podem apresentar aliasing. A deposição é simbólica e a rocha repousa em altura definida; não é simulação física. A janela não possui modo de redimensionamento.
+Cena demonstrativa com trajetórias programadas. Não há colisão, transparência de vidro, sombras em cascata ou luz pontual. Os três efeitos especiais foram removidos na revisão atual; o registro acima descreve a versão original. O mapa usa frustum fixo adequado ao terreno; detalhes finos podem apresentar aliasing. A deposição é simbólica e a rocha repousa em altura definida; não é simulação física. A janela não possui modo de redimensionamento.
 
 A aceitação do subconjunto didático da disciplina como framework do livro depende de confirmação docente. O teste comprova execução, não essa decisão acadêmica.
 
-## Atualização de 11/11/2026 — efeitos e métricas
+## Histórico — primeira atualização de 11/11/2026 (substituída)
+
+Esta seção e suas evidências registram a versão 023b3279, anterior à remoção dos três efeitos. Os resultados atuais estão na seção de revisão ao final.
 
 Os resultados desta seção correspondem à atualização do pacote Operacao_Rover_Atualizacao_Efeitos_Metricas.zip, integrada à base c7c23244c13e199130e34320fba2592cbe4d2a86. O registro de 10/11 acima é histórico da versão anterior.
 
@@ -90,3 +92,27 @@ Evidências desta atualização: `evidencias/resultado_atualizacao.json` e `evid
 A comparação de pixels encontrou ausência de bloom em parte do pulso vermelho no pacote original. A extração passou a usar o maior canal HDR acima de 1,12, e o teste exige mudança visível para cada efeito. A leitura de subprocessos também tolera bytes de mensagens localizadas do Windows para não gerar erro de decodificação.
 
 Os controles com teclado/mouse físicos e uma inspeção próxima de toda a coleta e descarga continuam sujeitos ao roteiro manual acima. A execução automatizada em GPU real não equivale a esse teste manual. Não há validação docente ou simulação de colisão física.
+
+## Revisão atual — remoção dos efeitos e correção da CPU (11/11/2026)
+
+A pedido do aluno, bloom, bump mapping e pós-processamento foram removidos integralmente, incluindo módulo, shaders, parâmetros e atalhos F1/F2/F3. A cena volta a ser desenhada diretamente no framebuffer da janela; texturas, luz, sombras, HUD, coleta e depósito continuam presentes. F4 mantém o controle do painel.
+
+A CPU deixou de aguardar a consulta de GPU. Agora possui um coletor independente, janela de medição de 0,5 s, atualização próxima de 1 s, tratamento de falhas e fallback nativo GetSystemTimes no Windows se psutil estiver ausente ou não puder medir. A inicialização exibe medindo... até haver amostra; ausência real de fonte exibe N/D. O painel indica CPU total com uma casa decimal.
+
+Validação executada no mesmo ambiente Windows/Intel Iris Xe descrito acima:
+
+| Verificação | Resultado |
+|---|---|
+| Lógica, câmera e telemetria | 21 testes passaram, incluindo CPU medida, ausência/falha de psutil, contadores inválidos, GPU lenta sem bloquear CPU e recuperação após erro |
+| Sintaxe Python | compileall passou |
+| Renderização direta real | 142 quadros, dois ciclos completos e GL_NO_ERROR |
+| Sombras | 31.503 pixels com diferença > 5 ao alternar sombras em 960 × 540 |
+| Coleta e depósito | Alinhamento e continuidade mantidos; depósito em (2,7172; 0,34; -2,4796), fora da pista |
+| Aplicação normal | 180 quadros em 1280 × 720 com captura e CPU visível; depois 142 quadros/71 s simulados, dois ciclos, GL_NO_ERROR |
+| CPU real pelo psutil | 6 snapshots válidos; amostras entre 5,8% e 39,8% |
+| CPU real sem psutil | 6 snapshots válidos com API nativa do Windows; amostras entre 3,79% e 28,41% |
+| Inspeção visual | Captura sem atalhos dos efeitos; CPU total 20,1%, FPS 58 naquele instante; GPU N/D neste ambiente |
+
+Evidências atuais: `evidencias/resultado_simplificado.json`, `evidencias/telemetria_cpu.json` e `evidencias/cena_simplificada.jpg`. O campo FPS dos snapshots isolados da telemetria foi fornecido como 60 para exercitar a API; não é uma medição de FPS. A captura da aplicação mostra o FPS real. Os percentuais de CPU são amostras de momentos diferentes, não uma comparação direta entre fontes nem um benchmark.
+
+A consulta de GPU mantém o comportamento anterior (NVIDIA ou contador de motor do Windows) e não inventa valores quando a fonte não está disponível. O teste com teclado/mouse físicos continua no roteiro manual.

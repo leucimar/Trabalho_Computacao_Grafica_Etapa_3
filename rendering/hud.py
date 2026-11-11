@@ -1,4 +1,4 @@
-"""HUD OpenGL: estado da missão, ajuda, FPS/CPU/GPU e efeitos gráficos."""
+"""HUD OpenGL: estado da missão, ajuda, FPS/CPU/GPU."""
 import ctypes
 import numpy as np
 import pygame
@@ -22,16 +22,18 @@ class Hud:
         self.last=None
 
     def draw(self,mission,fps,shadows,mouse,help_visible,fade,width,height,
-             telemetry=None,show_stats=True,effects=(True,True,True)):
+             telemetry=None,show_stats=True):
         telemetry=telemetry or {}
         def percent(value):
-            return 'N/D' if value is None else f'{value:.0f}%'
+            return 'N/D' if value is None else f'{value:.1f}%'
         cpu=percent(telemetry.get('cpu'))
+        if telemetry.get('cpu_status')=='waiting':
+            cpu='medindo...'
         gpu=percent(telemetry.get('gpu'))
         source=telemetry.get('gpu_kind','GPU')
         state=(mission.state,mission.paused,int(mission.progress*80),int(fps),
                shadows,mouse,help_visible,mission.cycles,show_stats,
-               cpu,gpu,source,tuple(effects))
+               cpu,gpu,source)
         if state!=self.last:
             self.last=state
             s=pygame.Surface((1280,720),pygame.SRCALPHA)
@@ -53,7 +55,7 @@ class Hud:
                 pygame.draw.rect(s,(8,22,29,228),(1006,172,250,124),border_radius=10)
                 text('MONITOR DE DESEMPENHO',1023,184,18,(242,190,76))
                 text(f'FPS  {int(fps):3d}',1023,207,24,(125,225,193))
-                text(f'CPU  {cpu}',1023,232,20)
+                text(f'CPU total  {cpu}',1023,232,20)
                 text(f'{source}  {gpu}',1023,255,18)
                 if source=='GPU motor*':
                     text('*motor mais ocupado',1023,275,18,(140,169,178))
@@ -61,8 +63,7 @@ class Hud:
                 pygame.draw.rect(s,(8,22,29,231),(24,600,1232,96),border_radius=10)
                 text('WASD mover   SETAS orientar   Q/E altura   SHIFT acelerar   MOUSE botão direito para olhar',44,608,24)
                 text('ESPAÇO pausar   R reiniciar   C câmera   L sombras   F12 captura   H ajuda   ESC sair',44,636,20,(143,177,180))
-                toggles='F1 Bloom %s   F2 Bump %s   F3 Pós %s   F4 Métricas'%tuple('ON' if e else 'OFF' for e in effects)
-                text(toggles,44,662,20,(143,195,180))
+                text('F4 mostrar/ocultar métricas   CPU total do sistema',44,662,20,(143,195,180))
             else:
                 text('H ajuda',30,680,20)
             glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,self.tex)
