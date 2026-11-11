@@ -27,7 +27,7 @@ Também foram inspecionados, mas **não incorporados**, `stemkoski/three.py` e `
 
 `assets/textures/sand.png`, `white.png`, `hazard.png` e `solar.png` são imagens produzidas por `tools/generate_textures.py`, com semente fixa e sem imagens externas. A imagem de `docs/evidencias/cena.jpg` é uma captura de renderização real desta aplicação, sem geração por IA de imagem.
 
-O painel HUD usa a fonte padrão distribuída pelo Pygame. Pygame, PyOpenGL e NumPy são dependências instaladas separadamente e conservam suas próprias licenças; não foram incluídas como cópias no repositório.
+O painel HUD usa a fonte padrão distribuída pelo Pygame. Pygame, PyOpenGL, NumPy e psutil são dependências instaladas separadamente e conservam suas próprias licenças; não foram incluídas como cópias no repositório.
 
 ## Enunciado e escolhas
 

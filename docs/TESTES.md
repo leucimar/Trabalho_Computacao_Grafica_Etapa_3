@@ -61,6 +61,32 @@ Não configure `SDL_VIDEODRIVER=dummy`: esse driver não oferece contexto OpenGL
 
 ## Limites conhecidos
 
-Cena demonstrativa com trajetórias programadas. Não há colisão, transparência de vidro, sombras em cascata, bloom, bump mapping ou luz pontual. O mapa usa frustum fixo adequado ao terreno; detalhes finos podem apresentar aliasing. A deposição é simbólica e a rocha repousa em altura definida; não é simulação física. A janela não possui modo de redimensionamento.
+Cena demonstrativa com trajetórias programadas. Não há colisão, transparência de vidro, sombras em cascata ou luz pontual. A atualização de 11/11/2026 acrescenta bloom, bump mapping e pós-processamento; o registro acima descreve a versão anterior. O mapa usa frustum fixo adequado ao terreno; detalhes finos podem apresentar aliasing. A deposição é simbólica e a rocha repousa em altura definida; não é simulação física. A janela não possui modo de redimensionamento.
 
 A aceitação do subconjunto didático da disciplina como framework do livro depende de confirmação docente. O teste comprova execução, não essa decisão acadêmica.
+
+## Atualização de 11/11/2026 — efeitos e métricas
+
+Os resultados desta seção correspondem à atualização do pacote Operacao_Rover_Atualizacao_Efeitos_Metricas.zip, integrada à base c7c23244c13e199130e34320fba2592cbe4d2a86. O registro de 10/11 acima é histórico da versão anterior.
+
+Ambiente efetivamente utilizado: Windows, Python 3.12.14 de 64 bits, Pygame 2.6.1/SDL 2.28.4, PyOpenGL 3.1.10, NumPy 2.3.5, psutil 7.2.2. OpenGL 3.3.0, driver 30.0.101.1404, Intel Iris Xe Graphics.
+
+| Verificação | Resultado |
+|---|---|
+| Testes de lógica e telemetria | 14 testes passaram, incluindo timeout, saída inválida, múltiplas GPUs e fallback Windows simulados |
+| Sintaxe Python | compileall passou |
+| Dois ciclos em OpenGL real | 142 quadros; 2 ciclos completos; GL_NO_ERROR |
+| Coleta e depósito | Coleta alinhada em (0,38; 0,34; 0,05); depósito em (2,7172; 0,34; -2,4796), fora da pista e a mais de 3 unidades do rover |
+| Continuidade durante transporte | Deslocamento máximo 0,12019 por amostra entre 15,02 e 21,49 s |
+| Sombras | 31.508 pixels com diferença maior que 5 ao alternar sombras, em 960 × 540 |
+| Efeitos independentes | 8 combinações renderizadas sem erro; bloom alterou 999 pixels, bump 102.029 e pós-processamento 518.400 na amostra de 18 s |
+| Framebuffers HDR | Alocação e redimensionamento em 640 × 360, 1 × 1 e 960 × 540 passaram |
+| Aplicação com efeitos | 180 quadros em 1280 × 720, captura real e encerramento sem erro |
+| Aplicação com efeitos desativados | 142 quadros com --fixed-dt 0.5 e --no-bloom --no-bump --no-post; 2 ciclos completos |
+| HUD e telemetria reais | Captura inspecionada: FPS e CPU visíveis; GPU N/D porque não houve fonte disponível pelo contador neste ambiente |
+
+Evidências desta atualização: `evidencias/resultado_atualizacao.json` e `evidencias/cena_atualizada.jpg`. Os valores de desempenho são circunstanciais; não são promessa de FPS. Consultas de telemetria não bloqueiam o loop gráfico.
+
+A comparação de pixels encontrou ausência de bloom em parte do pulso vermelho no pacote original. A extração passou a usar o maior canal HDR acima de 1,12, e o teste exige mudança visível para cada efeito. A leitura de subprocessos também tolera bytes de mensagens localizadas do Windows para não gerar erro de decodificação.
+
+Os controles com teclado/mouse físicos e uma inspeção próxima de toda a coleta e descarga continuam sujeitos ao roteiro manual acima. A execução automatizada em GPU real não equivale a esse teste manual. Não há validação docente ou simulação de colisão física.

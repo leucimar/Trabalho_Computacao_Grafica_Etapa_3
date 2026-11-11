@@ -1,6 +1,6 @@
 # Checklist de requisitos
 
-Fonte: enunciado do trabalho, página impressa 9. Individualidade autorizada informada pelo aluno. Resultados de desenvolvimento em 10/11/2026; teste no Windows ainda pendente.
+Fonte: enunciado do trabalho, página impressa 9. Individualidade autorizada informada pelo aluno. Registro original de 10/11/2026, atualizado em 11/11/2026. Execução automatizada no Windows passou; controles físicos e roteiro manual permanecem pendentes.
 
 | Requisito | Estado | Arquivo / método de evidência |
 |---|---|---|
@@ -20,9 +20,9 @@ Fonte: enunciado do trabalho, página impressa 9. Individualidade autorizada inf
 | Componentes do framework do livro | NÃO TESTADO quanto à aceitação formal | Integra versão didática independente do próprio docente; confirmar aceitação. Não foi obtido o pacote oficial integral |
 | Fontes, origem e componentes identificados | PASSOU | `FONTES_E_ATRIBUICAO.md`, `README_ORIGINAL_FRAMEWORK.md`, `ORIGEM_COMPONENTES.json` |
 | Shaders, attributes e uniforms explicados | PASSOU | `GUIA_TECNICO.md`, nomes reais do código |
-| Dependências e instruções Windows | PASSOU na elaboração; execução Windows NÃO TESTADA | `requirements.txt`, README |
+| Dependências e instruções Windows | PASSOU na elaboração e execução automatizada Windows | `requirements.txt`, README |
 | Roteiro de 10 minutos | PASSOU na elaboração | `ROTEIRO_APRESENTACAO.md`; domínio individual ainda deve ser treinado |
 | Declaração de IA e responsável individual | PASSOU | README e fontes |
 | Publicação no GitHub | Verificação externa no histórico remoto | A comprovação é a árvore publicada e seus commits; este arquivo isoladamente não comprova publicação |
 
-Bônus: não implementados. Não confundir emissão local do sinalizador com bloom/glow. Não se declara atendimento integral enquanto a ressalva do framework e a execução no ambiente de apresentação estiverem pendentes.
+Atualização de 11/11/2026: bloom/glow em HDR, bump mapping e pós-processamento implementados em `rendering/postprocess.py` e `shaders/`; FPS/CPU/GPU em `rendering/telemetry.py`. O halo é produzido por extração e desfoque. Consultar `TESTES.md` para distinguir os testes desta atualização do registro original. Não se declara atendimento integral enquanto a ressalva do framework e a execução no ambiente de apresentação estiverem pendentes.

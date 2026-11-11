@@ -28,7 +28,7 @@ Durante a pausa, mova com WASD e oriente com as setas. Demonstre o botão direit
 
 Aproxime o chão e o painel solar. Mostre os PNGs em `assets/textures`, a UV e `uvRepeat` no shader. As superfícies têm normais; a inversa transposta da matriz model mantém a normal correta quando há escala não uniforme.
 
-A luz direcional usa raios paralelos. `dot(normal, light)` determina o difuso; um termo ambiente evita preto total. O sinalizador altera cor e emissão local; não foi implementado bloom.
+A luz direcional usa raios paralelos. `dot(normal, light)` determina o difuso; um termo ambiente evita preto total. O sinalizador altera cor e emissão local. A cena HDR alimenta a extração e o desfoque de brilho para produzir bloom (F1). Demonstre também o bump nas superfícies (F2), tone mapping/gama (F3) e o painel de métricas (F4). GPU sem fonte disponível aparece como N/D.
 
 ## 7:00–8:30 — Sombra projetada
 

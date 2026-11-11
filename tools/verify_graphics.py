@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import json
+from itertools import product
 import numpy as np
 import pygame
 from OpenGL.GL import *
@@ -21,6 +22,7 @@ def main():
     pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK,pygame.GL_CONTEXT_PROFILE_CORE)
     pygame.display.set_mode((960,540),pygame.OPENGL|pygame.DOUBLEBUF)
     renderer=Renderer(1024); scene=Environment(Parts(renderer.material)); camera=Camera(); hud=Hud()
+    renderer.bloom=False; renderer.bump=False; renderer.post=False  # comparações em espaço direto
     out=Path(sys.argv[1]) if len(sys.argv)>1 else Path('capturas/verificacao')
     out.mkdir(parents=True,exist_ok=True)
     report={'opengl':glGetString(GL_VERSION).decode(),'renderer':glGetString(GL_RENDERER).decode()}
@@ -40,10 +42,27 @@ def main():
     # Pickup: the bucket transform meets the original rock centre, then the
     # loaded rock moves with the bucket. Check actual scene graph matrices.
     m=Mission();m.update(15);scene.animate(m)
-    np.testing.assert_allclose(scene.rock.getWorldPosition(),[.38,.52,.05],atol=1e-5)
+    np.testing.assert_allclose(scene.rock.getWorldPosition(),[.38,.34,.05],atol=1e-5)
     carried=scene.rock.getWorldMatrix().copy();m.update(2);scene.animate(m)
     assert np.linalg.norm(scene.rock.getWorldMatrix()[:3,3]-carried[:3,3])>.2
     report['bucket_pickup_alignment']=True
+    # Depósito à direita, afastado do corredor (largura z=+-1.3) e do rover.
+    m=Mission();m.update(21.6);scene.animate(m)
+    deposit=np.array(scene.rock.getWorldPosition())
+    rover=np.array(scene.rover.getWorldPosition())
+    assert deposit[0]>2.0 and deposit[2]<-1.9, deposit
+    assert np.linalg.norm(deposit-rover)>3.0
+    assert .29<=deposit[1]<=.39
+    report['deposit_world_position']=deposit.tolist()
+    # Verifica continuidade nos trechos de transporte e descarte.
+    samples=[]
+    for t in np.linspace(15.02,21.49,130):
+        m=Mission();m.update(float(t));scene.animate(m)
+        samples.append(scene.rock.getWorldPosition())
+    lengths=np.linalg.norm(np.diff(np.array(samples),axis=0),axis=1)
+    assert lengths.max()<.4, lengths.max()
+    report['max_rock_displacement_per_sample']=float(lengths.max())
+
     for seconds,name in [(4,'01_exploracao'),(15,'02_coleta'),(19.5,'03_transporte'),(29,'04_passagem')]:
         m=Mission();m.update(seconds);pose=scene.animate(m)
         renderer.shadows=True; renderer.draw(scene,camera,960,540)
@@ -59,6 +78,38 @@ def main():
         hud.draw(m,60,True,False,True,pose.fade,960,540)
         renderer.screenshot(out/(name+'.png'),960,540)
         assert glGetError()==GL_NO_ERROR
+    # Os efeitos gráficos devem renderizar sem erros mesmo combinados.
+    renderer.bloom=True;renderer.bump=True;renderer.post=True
+    m=Mission();m.update(18);scene.animate(m)
+    renderer.draw(scene,camera,960,540)
+    assert glGetError()==GL_NO_ERROR
+    report['bloom_bump_post_rendered']=True
+    # Exercita todos os controles e confirma que os efeitos alteram a imagem.
+    images={}
+    for bloom,bump,post in product((False,True),repeat=3):
+        renderer.bloom=bloom;renderer.bump=bump;renderer.post=post
+        renderer.draw(scene,camera,960,540)
+        assert glGetError()==GL_NO_ERROR
+        images[bloom,bump,post]=np.frombuffer(
+            glReadPixels(0,0,960,540,GL_RGB,GL_UNSIGNED_BYTE),dtype=np.uint8).astype(int)
+    baseline=images[False,False,False]
+    differences={}
+    for label,key in [('bloom',(True,False,False)),('bump',(False,True,False)),('post',(False,False,True))]:
+        diff=np.abs(images[key]-baseline).reshape(-1,3).max(axis=1)
+        differences[label]=int(np.count_nonzero(diff>0))
+        assert differences[label]>0, (label,differences)
+    report['effect_combinations_rendered']=len(images)
+    report['pixels_changed_by_effect']=differences
+    renderer.bloom=True;renderer.bump=True;renderer.post=True
+    renderer.draw(scene,camera,960,540)
+    hud.draw(m,60,renderer.shadows,False,True,0,960,540,
+             show_stats=True,effects=(True,True,True))
+    renderer.screenshot(out/'05_efeitos.png',960,540)
+    # Redimensionamento dos FBOs e restauração para a resolução original.
+    for w,h in ((640,360),(1,1),(960,540)):
+        renderer.draw(scene,camera,w,h)
+        assert glGetError()==GL_NO_ERROR
+    report['postprocess_resize_checked']=True
     # Invalid values, inconsistent transforms or dark fake shadow decals would
     # not produce these changing depth values and the second-pass difference.
     report['gl_error']=int(glGetError())

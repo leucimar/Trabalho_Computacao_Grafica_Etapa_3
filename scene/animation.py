@@ -44,12 +44,12 @@ class Pose:
 
 def pickup_angles():
     # Inverse kinematics for the rock centre. Coordinates are relative to
-    # arm_base=(.38,1.79,z+.1); bucket load offset=(.12,.02).
+    # arm_base=(.38,1.79,z+.1); bucket load offset=(.12,.22).
     tool_angle=-.4
-    lx=1.65+.12*math.cos(tool_angle)-.02*math.sin(tool_angle)
-    ly=.12*math.sin(tool_angle)+.02*math.cos(tool_angle)
+    lx=1.65+.12*math.cos(tool_angle)-.22*math.sin(tool_angle)
+    ly=.12*math.sin(tool_angle)+.22*math.cos(tool_angle)
     length=math.hypot(lx,ly)
-    x,y=2.65,-1.27
+    x,y=2.65,-1.45
     bend=-math.acos((x*x+y*y-2.15**2-length**2)/(2*2.15*length))
     shoulder=math.atan2(y,x)-math.atan2(length*math.sin(bend),2.15+length*math.cos(bend))
     return shoulder,bend-math.atan2(ly,lx)
@@ -112,14 +112,14 @@ class Mission:
             lift = smooth((q - .3) / .2)
             swing = smooth((q - .5) / .3)
             lower = smooth((q - .8) / .15)
-            p.shoulder = mix(.6, PICKUP_SHOULDER, reach) + .35 * lift - .3 * lower
-            p.elbow = mix(-1.2, PICKUP_ELBOW, reach) + .35 * lift - .35 * lower
+            p.shoulder = mix(.6, PICKUP_SHOULDER, reach) + .35 * lift - .37 * lower
+            p.elbow = mix(-1.2, PICKUP_ELBOW, reach) + .35 * lift - .38 * lower
             p.bucket = -.4 * reach + .7 * smooth((q - .92) / .08)
-            p.turret = -1.25 * swing
+            p.turret = 1.35 * swing  # descarga no lado afastado do rover
         elif k == 4:
-            p.turret = mix(-1.25, 0, u)
-            p.shoulder = mix(PICKUP_SHOULDER+.05, .6, u)
-            p.elbow = mix(PICKUP_ELBOW, -1.2, u)
+            p.turret = mix(1.35, 0, u)
+            p.shoulder = mix(PICKUP_SHOULDER-.02, .6, u)
+            p.elbow = mix(PICKUP_ELBOW-.03, -1.2, u)
             p.bucket = mix(.3, 0, u)
             p.excavator_z = mix(-2.7, -5.3, u)
         elif k >= 5:

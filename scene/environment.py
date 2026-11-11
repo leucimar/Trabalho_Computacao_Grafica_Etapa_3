@@ -29,9 +29,9 @@ class Environment(Object3D):
             p.box(self,(x,1.17,z),(.62,.27,.09),(.14,.44,.5))
         self.rover=Rover(p); self.add(self.rover)
         self.excavator=Excavator(p); self.add(self.excavator)
-        self.rock=p.part(self,'rock',(.38,.52,.05),(.95,.95,1.05),(.62,.42,.29))
-        self.rest_transform=transform((.38,.52,.05),scale=(.95,.95,1.05))
-        self.deposit=None
+        self.rock=p.part(self,'rock',(.38,.34,.05),(.62,.62,.62),(.62,.42,.29))
+        self.rest_transform=transform((.38,.34,.05),scale=(.62,.62,.62))
+        # Rocha menor e caçamba mais larga reduzem a interpenetração visual.
 
     def animate(self,mission):
         pose=mission.pose()
@@ -41,16 +41,16 @@ class Environment(Object3D):
         if state==State.EXCAVATOR_WORKING and .3 <= mission.progress < .95:
             # Keep the rock mesh under the scene and use the bucket's world
             # matrix, preserving its true hierarchical attachment during lift.
-            self.rock.transform=self.excavator.load.getWorldMatrix() @ transform(scale=(.95,.95,1.05))
-            self.deposit=self.rock.transform.copy()
+            self.rock.transform=self.excavator.load.getWorldMatrix() @ transform(scale=(.62,.62,.62))
+            # Matriz calculada a cada quadro a partir do braço articulado.
         elif state.value>=State.EXCAVATOR_WORKING.value and (state.value>3 or mission.progress>=.95):
             # Derive final deposit from the endpoint pose even if dt skips
             # the entire pickup interval; no dependency on render frequency.
             from scene.animation import Mission, DURATIONS
             end=Mission(); end.state=State.EXCAVATOR_WORKING; end.elapsed=DURATIONS[3]*.95
             self.excavator.animate(end.pose())
-            deposited=self.excavator.load.getWorldMatrix() @ transform(scale=(.95,.95,1.05))
-            deposited[1,3]=.52
+            deposited=self.excavator.load.getWorldMatrix() @ transform(scale=(.62,.62,.62))
+            deposited[1,3]=.34  # rocha apoiada no chão fora da pista
             self.rock.transform=deposited
             self.excavator.animate(pose)
         else:

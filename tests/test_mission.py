@@ -42,6 +42,13 @@ class MissionTests(unittest.TestCase):
         for value in (-1,math.inf,math.nan):
             with self.assertRaises(ValueError): Mission().update(value)
 
+    def test_rock_disposal_turret_points_away_from_rover(self):
+        m=Mission(); m.update(19.5)
+        self.assertGreater(m.pose().turret,1.0)
+        m=Mission(); m.update(22.0)
+        self.assertEqual(m.state,State.EXCAVATOR_CLEAR)
+        self.assertAlmostEqual(m.pose().turret,1.35)
+
     def test_mouse_orientation(self):
         c=Camera(); old=c.forward.copy(); c.update(0,{},(100,-50))
         self.assertGreater(np.linalg.norm(c.forward-old),.1)

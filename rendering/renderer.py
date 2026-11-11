@@ -7,14 +7,15 @@ from OpenGL.GL.shaders import compileShader, compileProgram
 from core.mesh import Mesh
 from core.uniform import Uniform
 from scene.camera_controls import look_at
+from rendering.postprocess import PostProcess
 
 ROOT=Path(__file__).resolve().parents[1]
 
 
 def program(name):
     # Explicit locations bind the same framework VAO in both passes.
-    vertex=compileShader((ROOT/'shaders'/f'{name}.vert').read_text(),GL_VERTEX_SHADER)
-    fragment=compileShader((ROOT/'shaders'/f'{name}.frag').read_text(),GL_FRAGMENT_SHADER)
+    vertex=compileShader((ROOT/'shaders'/f'{name}.vert').read_text(encoding='utf-8'),GL_VERTEX_SHADER)
+    fragment=compileShader((ROOT/'shaders'/f'{name}.frag').read_text(encoding='utf-8'),GL_FRAGMENT_SHADER)
     ref=glCreateProgram(); glAttachShader(ref,vertex); glAttachShader(ref,fragment)
     if name!='hud':
         for loc,key in enumerate(('vertexPosition','vertexNormal','vertexUV')):
@@ -37,6 +38,10 @@ class Renderer:
         self.material=SceneMaterial()
         self.shadow_size=size
         self.shadows=True
+        self.bump=True
+        self.bloom=True
+        self.post=True
+        self.postfx=PostProcess()
         self.locations={}
         self.matrix_uniforms={}
         self.direction=np.array([-.55,-1.,-.45],dtype=np.float32)
@@ -107,7 +112,7 @@ class Renderer:
                 glBindVertexArray(mesh.vaoRef)
                 glDrawArrays(GL_TRIANGLES,0,mesh.geometry.vertexCount)
         # Pass 2: camera, texture, local illumination and depth comparison.
-        glBindFramebuffer(GL_FRAMEBUFFER,0); glViewport(0,0,width,height)
+        self.postfx.begin(width,height)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         ref=self.material.programRef; glUseProgram(ref)
         self.matrix(ref,'viewMatrix',camera.view)
@@ -116,6 +121,7 @@ class Renderer:
         glUniform3fv(self.location(ref,'lightDirection'),1,self.direction)
         glUniform3fv(self.location(ref,'cameraPosition'),1,camera.position.astype(np.float32))
         glUniform1i(self.location(ref,'shadowsEnabled'),int(self.shadows))
+        glUniform1i(self.location(ref,'bumpEnabled'),int(self.bump))
         glUniform1i(self.location(ref,'colorTexture'),0)
         glUniform1i(self.location(ref,'shadowMap'),1)
         glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D,self.depth_texture)
@@ -125,10 +131,12 @@ class Renderer:
             glUniform3f(self.location(ref,'baseColor'),*mesh.color)
             glUniform2f(self.location(ref,'uvRepeat'),*mesh.uv_repeat)
             glUniform1f(self.location(ref,'emission'),mesh.emission)
+            glUniform1f(self.location(ref,'bumpStrength'),getattr(mesh,'bump_strength',0.0))
             glBindTexture(GL_TEXTURE_2D,self.textures[mesh.texture_name])
             glBindVertexArray(mesh.vaoRef)
             glDrawArrays(GL_TRIANGLES,0,mesh.geometry.vertexCount)
         glBindVertexArray(0)
+        self.postfx.end(width,height,self.bloom,self.post)
 
     def depth_pixels(self):
         glBindTexture(GL_TEXTURE_2D,self.depth_texture)

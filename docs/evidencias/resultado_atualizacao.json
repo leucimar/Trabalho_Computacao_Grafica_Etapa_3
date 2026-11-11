@@ -1,0 +1,26 @@
+{
+  "opengl": "3.3.0 - Build 30.0.101.1404",
+  "renderer": "Intel(R) Iris(R) Xe Graphics",
+  "rendered_frames": 142,
+  "completed_cycles": 2,
+  "depth_min": 0.2905831038951874,
+  "depth_max": 1.0,
+  "max_changed_depth_pixels": 8458,
+  "bucket_pickup_alignment": true,
+  "deposit_world_position": [
+    2.7172188758850098,
+    0.3400000035762787,
+    -2.4795594215393066
+  ],
+  "max_rock_displacement_per_sample": 0.1201891352559668,
+  "pixels_changed_by_shadow": 31508,
+  "bloom_bump_post_rendered": true,
+  "effect_combinations_rendered": 8,
+  "pixels_changed_by_effect": {
+    "bloom": 999,
+    "bump": 102029,
+    "post": 518400
+  },
+  "postprocess_resize_checked": true,
+  "gl_error": 0
+}

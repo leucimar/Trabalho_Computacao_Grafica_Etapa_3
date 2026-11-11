@@ -37,13 +37,13 @@ class Excavator(Object3D):
         p.part(self.elbow,'cylinder',(0,0,0),(.32,.36,.32),dark,rotation=(math.pi/2,0,0))
         self.bucket=p.node(self.elbow,(1.65,0,0))
         # Open bucket, rather than a solid block: back, floor and side walls.
-        p.box(self.bucket,(.12,-.17,0),(.52,.12,.8),dark)
-        p.box(self.bucket,(-.1,.02,0),(.12,.38,.8),yellow)
-        for z in (-.36,.36):
-            p.box(self.bucket,(.12,-.02,z),(.52,.35,.09),yellow)
-        for z in (-.28,0,.28):
-            p.box(self.bucket,(.43,-.15,z),(.22,.09,.1),(.65,.71,.69))
-        self.load=p.node(self.bucket,(.12,.02,0))
+        p.box(self.bucket,(.12,-.22,0),(.82,.12,1.1),dark)
+        p.box(self.bucket,(-.35,.01,0),(.12,.50,1.1),yellow)
+        for z in (-.51,.51):
+            p.box(self.bucket,(.10,-.06,z),(.84,.43,.08),yellow)
+        for z in (-.35,0,.35):
+            p.box(self.bucket,(.54,-.17,z),(.19,.09,.12),(.65,.71,.69))
+        self.load=p.node(self.bucket,(.12,.22,0))
 
     def animate(self,pose):
         self.transform=transform((0,0,pose.excavator_z))
